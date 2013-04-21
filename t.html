@@ -1,1 +1,104 @@
-aa
+<html>
+<head>
+  <meta charset='utf-8'>
+	<title></title>
+</head>
+<body>
+	<a href='javascript:void(0)' onclick='tu3_init("ji.jpg", 5)'>Once Again</a>
+<script type="text/javascript">
+function $ (elem) {
+	return document.getElementById(elem);
+}
+
+function onloaded (size) {
+	var img = $('base_img');
+	if ( parseInt( img.width ) < 0 ) {
+		return;
+	};
+	clearInterval( sign );
+
+	var total_width = img.width;
+	var total_height = img.height;
+	var per_width = total_width / size;
+	var per_height = total_height / size;
+	var arr_li = [];
+	for (var i = 0; i < size * size; i++) {
+		var w = -( i % size ) * per_width;
+		var h = -parseInt( i /size ) * per_height;
+		arr_li.push( "<li onclick='doclick(this)' style='float:left; border:1px solid #fff;width: "+ per_width +"px; height: "+ per_height +"px; background: url("+ img.src +") "+w+"px "+h+"px' index="+i+"></li>" );
+	}
+	arr_li.sort();
+	var boxList;
+	var box_name = 'box_list';
+	if ( !$( box_name ) ) {
+		boxList = document.createElement( 'ul' );
+		boxList.id = box_name;
+		document.body.appendChild(boxList);
+	}
+	else
+	{
+		boxList = $( box_name );
+	}
+	boxList.innerHTML = arr_li.join('');
+	boxList.style.width = ( parseInt( img.width ) + 2 * size ) + 'px';
+	boxList.style.height = ( parseInt( img.height ) + 2 * size ) + 'px';
+}
+function tu3_check () {
+	var boxs = $('box_list').childNodes;
+	var sign = true;
+	for (var i = 0; i < boxs.length; i++) {
+		if (boxs[i].getAttribute('index') != i ) {
+			sign = false;
+			break;
+		}
+	}
+	if (sign) {
+		alert( '拼好了.....' )
+	}
+}
+
+var sign;
+function tu3_init (img_url, size) {
+	var img = $('base_img') ? $('base_img') : document.createElement('img');
+	img.src = img_url;
+	img.id = 'base_img';
+	img.style.display = 'none';
+	document.body.appendChild(img);
+	sign = setInterval( 'onloaded('+ size +')', 100 );
+}
+tu3_init('ji.jpg', 5);
+
+var curr;
+function doclick(obj)
+{
+	if ( !curr ) {
+		curr = obj;
+		obj.style.borderColor = '#cbb';	
+	}
+	else{
+		swapNode(obj,curr);
+		curr.style.borderColor = '';	
+		curr = '';
+		tu3_check ();
+	}
+}
+
+function swapNode(node1,node2)
+{
+	var parent = node1.parentNode;//父节点
+	var t1 = node1.nextSibling;//两节点的相对位置
+	var t2 = node2.nextSibling;
+
+	//如果是插入到最后就用appendChild
+	if(t1) parent.insertBefore(node2,t1);
+	else parent.appendChild(node2);
+	if(t2) parent.insertBefore(node1,t2);
+	else parent.appendChild(node1);
+}    
+
+
+
+</script>
+
+</body>
+</html>
