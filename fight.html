@@ -21,7 +21,10 @@ li {
 	height: 100px;
 	float: left;
 	margin: 1px;
-	background: #acacac;
+	background: #eee;
+}
+.gray {
+	background: #bbb;
 }
 .red {
 	background: #ff3333;
@@ -89,6 +92,15 @@ for (var i = 1; i < maxTime; i++) {
 	};
 };
 
+for ( j in positions ) {
+	if ( isset( leftRoles[ j ] ) ) {
+		playModel( 1, j, leftRoles[ j ][ 'model' ], 0 );
+	}
+	if ( isset( rightRoles[ j ] ) ) {
+		playModel( 2, j, rightRoles[ j ][ 'model' ], 0 );
+	}
+}
+
 function findOp (pos, act) {
 	switch ( pos  )
 	{
@@ -128,7 +140,7 @@ play();
 function playModel (pos,index, modelId, act) {
 	var objs = { 1: leftUlElem, 2 : rightUlElem };
 	var obj = objs[ pos ].childNodes[ index ];
-	var colors = { 0: '', 1 : 'red', 2: 'green' };
+	var colors = { 0: 'gray', 1 : 'red', 2: 'green' };
 	obj.className = colors[act];
 	obj.innerHTML = '';
 	if ( act > 0 ) {
