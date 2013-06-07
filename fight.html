@@ -1,0 +1,117 @@
+<html>
+<body>
+<title>Fight</title>
+<style type="text/css">
+div {
+  margin: auto;
+	width: 660px;
+	height: 360px;
+	border: 1px solid #000;
+}
+ul {
+	width: 310px;
+	height: 310px;
+	padding: 10px;
+	border: 0px solid #000;
+	float: left;
+	list-style: none;
+}
+li {
+	width: 100px;
+	height: 100px;
+	float: left;
+	margin: 1px;
+	background: #acacac;
+}
+.red {
+	background: #ff3333;
+}
+.green {
+	background: #99ff66;
+}
+</style>
+<body>
+<script type="text/javascript">
+function $ (elemId) {
+	return document.getElementById(elemId);
+}
+function createElem (tagName) {
+	return document.createElement(tagName);
+}
+
+var leftUlElem = createElem( 'ul' );
+var liElem = createElem( 'li' );
+for (var i = 1, len = 10; i < len; i++) {
+	leftUlElem.appendChild( liElem.cloneNode() );
+};
+var divElem = createElem( 'div' );
+var rightUlElem = leftUlElem.cloneNode(1);
+leftUlElem.id='leftRoles';
+rightUlElem.id='rightRoles';
+divElem.appendChild( leftUlElem );
+divElem.appendChild( rightUlElem );
+document.body.appendChild( divElem );
+
+var timeSpan = createElem( 'span' );
+timeSpan.id = 'timeSpan';
+document.body.appendChild( timeSpan );
+
+var leftRoles = [
+	{ 'pos': 0, 'life': 300, 'speed': 3, 'fight': 2 },
+	{ 'pos': 5, 'life': 300, 'speed': 5, 'fight': 2 },
+	{ 'pos': 7, 'life': 300, 'speed': 7, 'fight': 2 },
+];
+var maxTime = 100, dataList = {};
+var len = leftRoles.length, j;
+for (var i = 0; i < maxTime; i++) {
+	for (j = 0; j < len; j++) {
+		if ( i % leftRoles[ j ][ 'speed' ] == 0 ) {
+			add( i, leftRoles[ j ][ 'pos' ] );
+		};
+	};
+};
+
+function isset (value) {
+	return typeof value != 'undefined';
+}
+function add(sec,id,fight){
+	if ( !isset( dataList[ sec ] ) ) {
+		dataList[ sec ] = [];
+	}
+	dataList[ sec ].push( id );
+}
+
+var intervalSign, currSec=0, currFrame=0;
+function debug (value) {
+	console.debug( value );
+}
+function play ( per ) {
+	debug( [ 'setInterval', maxTime ] );
+	intervalSign = setInterval( 'playFrame()', per );
+}
+function playFrame () {
+	currSec++;
+	if ( currFrame > 0 ) {
+		for (var i = 0, len = dataList[ currFrame ].length; i < len; i++) {
+			leftUlElem.childNodes[ dataList[ currFrame ][i] ].className = '';
+		};
+		currFrame=0;
+	};
+	if ( currSec > maxTime ) {
+		debug( [ 'clearInterval', maxTime ] );
+		clearInterval(intervalSign);
+		return;
+	};
+	$('timeSpan').innerHTML = currSec;	
+	if ( isset( dataList[ currSec ] ) ) {
+		currFrame = currSec;
+		for (var i = 0, len = dataList[ currSec ].length; i < len; i++) {
+			leftUlElem.childNodes[ dataList[ currSec ][i] ].className = 'green';
+		};
+	};
+}
+play(100)
+</script>
+</body>
+</body>
+</html>
