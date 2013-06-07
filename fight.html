@@ -56,61 +56,92 @@ var timeSpan = createElem( 'span' );
 timeSpan.id = 'timeSpan';
 document.body.appendChild( timeSpan );
 
-var leftRoles = [
-	{ 'pos': 0, 'life': 300, 'speed': 3, 'fight': 2 },
-	{ 'pos': 5, 'life': 300, 'speed': 5, 'fight': 2 },
-	{ 'pos': 7, 'life': 300, 'speed': 7, 'fight': 2 },
-];
-var maxTime = 100, dataList = {};
-var len = leftRoles.length, j;
-for (var i = 0; i < maxTime; i++) {
-	for (j = 0; j < len; j++) {
-		if ( i % leftRoles[ j ][ 'speed' ] == 0 ) {
-			add( i, leftRoles[ j ][ 'pos' ] );
+var modelList = {
+	1 : [ 5, 6, 5, 7 ],
+	2 : [ 11, 7, 5, 7 ],
+	3 : [ 9, 8, 5, 7 ],
+	4 : [ 7, 6, 5, 7 ]
+};
+var fightArea = {
+	1 : [  ]
+}
+
+var leftRoles = {
+	0: { 'model': 4, 'life': 300, 'speed': 3, 'fight': 2 },
+	5: { 'model': 2, 'life': 300, 'speed': 5, 'fight': 2 },
+	7: { 'model': 3, 'life': 300, 'speed': 7, 'fight': 2 }
+};
+var rightRoles = {
+	4: { 'model': 2, 'life': 300, 'speed': 3, 'fight': 2 },
+	6: { 'model': 4, 'life': 300, 'speed': 5, 'fight': 2 },
+	8: { 'model': 1, 'life': 300, 'speed': 7, 'fight': 2 }
+};
+var maxTime = 20, dataList = [], positions=[3,0,6,4,1,7,5,2,8];
+var len = leftRoles.length, j, have=false;
+for (var i = 1; i < maxTime; i++) {
+	for ( j in positions ) {
+		if ( isset( leftRoles[ j ] ) && i % leftRoles[ j ][ 'speed' ] == 0 ) {
+			add( [ 1, j, leftRoles[ j ][ 'model' ], 1 ] );
+		};
+		if ( isset( rightRoles[ j ] ) && i % rightRoles[ j ][ 'speed' ] == 0 ) {
+			add( [ 2, j, rightRoles[ j ][ 'model' ], 1 ] );
 		};
 	};
 };
 
+function findOp (pos, act) {
+	switch ( pos  )
+	{
+		case 1:
+		break;
+	}
+}
 function isset (value) {
 	return typeof value != 'undefined';
 }
-function add(sec,id,fight){
-	if ( !isset( dataList[ sec ] ) ) {
-		dataList[ sec ] = [];
-	}
-	dataList[ sec ].push( id );
+function add(data){
+	dataList.push( data );
 }
 
-var intervalSign, currSec=0, currFrame=0;
+var currSec=0, baseSpeed=100, currData;
 function debug (value) {
 	console.debug( value );
 }
-function play ( per ) {
-	debug( [ 'setInterval', maxTime ] );
-	intervalSign = setInterval( 'playFrame()', per );
-}
-function playFrame () {
-	currSec++;
-	if ( currFrame > 0 ) {
-		for (var i = 0, len = dataList[ currFrame ].length; i < len; i++) {
-			leftUlElem.childNodes[ dataList[ currFrame ][i] ].className = '';
-		};
-		currFrame=0;
-	};
-	if ( currSec > maxTime ) {
-		debug( [ 'clearInterval', maxTime ] );
-		clearInterval(intervalSign);
+
+function play () {
+	if ( currSec >= dataList.length ) {
 		return;
 	};
-	$('timeSpan').innerHTML = currSec;	
-	if ( isset( dataList[ currSec ] ) ) {
-		currFrame = currSec;
-		for (var i = 0, len = dataList[ currSec ].length; i < len; i++) {
-			leftUlElem.childNodes[ dataList[ currSec ][i] ].className = 'green';
-		};
+	currData = dataList[ currSec ];
+	currSec++;
+	timeSpan.innerHTML = currSec;
+	playFrame();
+}
+function playFrame () {
+	playModel( currData[ 0 ], currData[ 1 ], currData[ 2 ], currData[ 3 ] );
+}
+function clearFrame() {
+	playModel( currData[ 0 ], currData[ 1 ], currData[ 2 ], 0 );
+}
+play();
+
+function playModel (pos,index, modelId, act) {
+	var objs = { 1: leftUlElem, 2 : rightUlElem };
+	var obj = objs[ pos ].childNodes[ index ];
+	var colors = { 0: '', 1 : 'red', 2: 'green' };
+	obj.className = colors[act];
+	obj.innerHTML = '';
+	if ( act > 0 ) {
+		var n=0, sign = setInterval( function(){
+			obj.innerHTML = n;
+			if ( n++ >= modelList[ modelId ][ act ] ) {
+				clearInterval( sign );
+				clearFrame();
+				play();
+			};
+		}, baseSpeed );
 	};
 }
-play(100)
 </script>
 </body>
 </body>
