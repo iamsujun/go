@@ -32,6 +32,9 @@ li {
 .green {
 	background: #99ff66;
 }
+.black {
+	background: #000;
+}
 </style>
 <body>
 <script type="text/javascript">
@@ -59,54 +62,113 @@ var timeSpan = createElem( 'span' );
 timeSpan.id = 'timeSpan';
 document.body.appendChild( timeSpan );
 
+/**
+ * 战斗模型信息
+ * @type {Object}
+ * 模型编号 : [ 站立动作时长, 攻击动作时长, 被攻击动作时长, 死亡动作时长 ]
+ */
 var modelList = {
-	1 : [ 5, 6, 5, 7 ],
-	2 : [ 11, 7, 5, 7 ],
-	3 : [ 9, 8, 5, 7 ],
-	4 : [ 7, 6, 5, 7 ]
+	1 : [ 1, 6, 5, 2 ],
+	2 : [ 1, 7, 5, 2 ],
+	3 : [ 1, 8, 5, 2 ],
+	4 : [ 1, 6, 5, 2 ]
 };
 var fightArea = {
 	1 : [  ]
 }
 
 var leftRoles = {
-	0: { 'model': 4, 'life': 300, 'speed': 3, 'fight': 2 },
-	5: { 'model': 2, 'life': 300, 'speed': 5, 'fight': 2 },
-	7: { 'model': 3, 'life': 300, 'speed': 7, 'fight': 2 }
+	0: { 'model': 4, 'life': 300, 'speed': 3, 'fight': 128 },
+	5: { 'model': 2, 'life': 300, 'speed': 6, 'fight': 130 },
+	7: { 'model': 3, 'life': 300, 'speed': 7, 'fight': 158 }
 };
 var rightRoles = {
-	4: { 'model': 2, 'life': 300, 'speed': 3, 'fight': 2 },
-	6: { 'model': 4, 'life': 300, 'speed': 5, 'fight': 2 },
-	8: { 'model': 1, 'life': 300, 'speed': 7, 'fight': 2 }
+	4: { 'model': 2, 'life': 300, 'speed': 4, 'fight': 138 },
+	6: { 'model': 4, 'life': 300, 'speed': 5, 'fight': 156 },
+	8: { 'model': 1, 'life': 300, 'speed': 7, 'fight': 160 }
 };
+/**
+ * 阵型初始化
+ */
+for ( var j=0; j < 9; j++ ) {
+	if ( isset( leftRoles[ j ] ) ) {
+		playModel( 0, j, leftRoles[ j ][ 'model' ], 0 );
+	}
+	if ( isset( rightRoles[ j ] ) ) {
+		playModel( 1, j, rightRoles[ j ][ 'model' ], 0 );
+	}
+}
+/**
+ * 战斗计算
+ */
 var maxTime = 20, dataList = [], positions=[3,0,6,4,1,7,5,2,8];
-var len = leftRoles.length, j, have=false;
+var len = leftRoles.length, j;
+var team = [ leftRoles, rightRoles ], opIndex = [ 1, 0 ], side;
 for (var i = 1; i < maxTime; i++) {
 	for ( j in positions ) {
-		if ( isset( leftRoles[ j ] ) && i % leftRoles[ j ][ 'speed' ] == 0 ) {
-			add( [ 1, j, leftRoles[ j ][ 'model' ], 1 ] );
-		};
-		if ( isset( rightRoles[ j ] ) && i % rightRoles[ j ][ 'speed' ] == 0 ) {
-			add( [ 2, j, rightRoles[ j ][ 'model' ], 1 ] );
-		};
+		pos = positions[ j ];
+		for( side in team )
+		{
+			if ( isset( team[ side ][ pos ] ) ) {
+				fightOnce ( side, opIndex[ side ], team[ side ][ pos ], team[ opIndex[ side ] ] );
+			}
+		}
 	};
 };
 
-for ( j in positions ) {
-	if ( isset( leftRoles[ j ] ) ) {
-		playModel( 1, j, leftRoles[ j ][ 'model' ], 0 );
-	}
-	if ( isset( rightRoles[ j ] ) ) {
-		playModel( 2, j, rightRoles[ j ][ 'model' ], 0 );
-	}
+/**
+ * 一次出手计算
+ * @param  {int} side    队伍位置（0：左侧，1：右侧）
+ * @param  {int} opSide  对战方位置
+ * @param  {array} role    攻击者信息
+ * @param  {array} opRoles 被攻击对我信息
+ * @return {void}
+ */
+function fightOnce ( side, opSide, role, opRoles ) {
+	if ( i % role[ 'speed' ] == 0 && role[ 'life' ] > 0 ) {
+		add( [ side, pos, role[ 'model' ], 1 ] );
+		var indexs = findOp( pos, 1 );
+		for( var r in indexs )
+		{
+			if ( isset( opRoles[ indexs[ r] ] ) && opRoles[ indexs[ r] ][ 'life' ] > 0 ) {
+				add( [ opSide, indexs[ r], opRoles[ indexs[ r] ][ 'model' ], 2 ] );
+				opRoles[ indexs[ r] ][ 'life' ] -= role[ 'fight' ];
+				if ( opRoles[ indexs[ r] ][ 'life' ] <= 0 ) {
+					add( [ opSide, indexs[ r], opRoles[ indexs[ r] ][ 'model' ], 3 ] );
+				};
+				break;
+			};
+		}
+	};
 }
 
+/**
+ * 计算被攻击顺序
+ * @param  {int} pos 攻击者在队伍中位置
+ * @param  {int} act 攻击动作编号
+ * @return {array}     被攻击序列
+ */
 function findOp (pos, act) {
-	switch ( pos  )
+	var indexs;
+	switch ( parseInt(pos)  )
 	{
+		case 0:
 		case 1:
+		case 2:
+			indexs = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ];
+		break;
+		case 3:
+		case 4:
+		case 5:
+			indexs = [ 3, 4, 5, 0, 1, 2, 6, 7, 8 ];
+		break;
+		case 6:
+		case 7:
+		case 8:
+			indexs = [ 6, 7, 8, 3, 4, 5, 0, 1, 2 ];
 		break;
 	}
+	return indexs;
 }
 function isset (value) {
 	return typeof value != 'undefined';
@@ -138,21 +200,30 @@ function clearFrame() {
 play();
 
 function playModel (pos,index, modelId, act) {
-	var objs = { 1: leftUlElem, 2 : rightUlElem };
-	var obj = objs[ pos ].childNodes[ index ];
-	var colors = { 0: 'gray', 1 : 'red', 2: 'green' };
+	var objs = [ leftUlElem, rightUlElem ];
+	var teams = [
+		[ 2, 1, 0, 5, 4, 3, 8, 7, 6 ],
+		[ 0, 1, 2, 3, 4, 5, 6, 7, 8 ]
+	];
+	var teamPos = teams[ pos ][ index ];
+	var obj = objs[ pos ].childNodes[ teamPos ];
+	var colors = { 0: 'gray', 1 : 'green', 2: 'red', 3: 'black' };
 	obj.className = colors[act];
 	obj.innerHTML = '';
-	if ( act > 0 ) {
-		var n=0, sign = setInterval( function(){
-			obj.innerHTML = n;
-			if ( n++ >= modelList[ modelId ][ act ] ) {
-				clearInterval( sign );
-				clearFrame();
-				play();
-			};
-		}, baseSpeed );
+	if (act == 0) {
+		return
 	};
+	
+	var n=0, sign = setInterval( function(){
+		obj.innerHTML = n;
+		if ( n++ >= modelList[ modelId ][ act ] ) {
+			clearInterval( sign );
+			if (act != 3) {
+				clearFrame();
+			};
+			play();
+		};
+	}, baseSpeed );
 }
 </script>
 </body>
