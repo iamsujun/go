@@ -68,24 +68,24 @@ document.body.appendChild( timeSpan );
  * 模型编号 : [ 站立动作时长, 攻击动作时长, 被攻击动作时长, 死亡动作时长 ]
  */
 var modelList = {
-	1 : [ 1, 6, 5, 2 ],
-	2 : [ 1, 7, 5, 2 ],
-	3 : [ 1, 8, 5, 2 ],
-	4 : [ 1, 6, 5, 2 ]
+	1001 : [ 1, 6, 5, 2 ],
+	1002 : [ 1, 7, 5, 2 ],
+	1003 : [ 1, 8, 5, 2 ],
+	1004 : [ 1, 6, 5, 2 ]
 };
 var fightArea = {
 	1 : [  ]
 }
 
 var leftRoles = {
-	0: { 'model': 4, 'life': 300, 'speed': 3, 'fight': 128 },
-	5: { 'model': 2, 'life': 300, 'speed': 6, 'fight': 130 },
-	7: { 'model': 3, 'life': 300, 'speed': 7, 'fight': 158 }
+	0: { 'model': 1004, 'life': 300, 'speed': 3, 'fight': 128 },
+	5: { 'model': 1002, 'life': 300, 'speed': 6, 'fight': 130 },
+	7: { 'model': 1003, 'life': 300, 'speed': 7, 'fight': 158 }
 };
 var rightRoles = {
-	4: { 'model': 2, 'life': 300, 'speed': 4, 'fight': 138 },
-	6: { 'model': 4, 'life': 300, 'speed': 5, 'fight': 156 },
-	8: { 'model': 1, 'life': 300, 'speed': 7, 'fight': 160 }
+	4: { 'model': 1002, 'life': 300, 'speed': 4, 'fight': 138 },
+	6: { 'model': 1004, 'life': 300, 'speed': 5, 'fight': 156 },
+	8: { 'model': 1001, 'life': 300, 'speed': 7, 'fight': 160 }
 };
 /**
  * 阵型初始化
