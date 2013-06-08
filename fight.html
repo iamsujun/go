@@ -177,6 +177,24 @@ function beAttackCharge ( side, opSide, role, opRoles ) {
 				};
 			}
 		break;
+		case attackArea[ 'pierce' ]: //穿透攻击
+			var childIndexs, sign=false;
+			for( var i in indexs )
+			{
+				childIndexs = indexs[ i ];
+				for (r in childIndexs) {
+					if ( isset( opRoles[ childIndexs[ r] ] ) && opRoles[ childIndexs[ r] ][ 'life' ] > 0 ) {
+						sign=true;
+						if ( isset( opRoles[ childIndexs[ r] + 1 ] ) && opRoles[ childIndexs[ r] + 1 ][ 'life' ] > 0 ) {
+							beAttackDo( opSide, childIndexs[ r] + 1, role, opRoles[ childIndexs[ r] + 1 ] );
+						};
+					};
+				};
+				if (sign) {
+					break;
+				};
+			}
+		break;
 	}
 }
 /**
