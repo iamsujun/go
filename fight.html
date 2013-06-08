@@ -73,9 +73,17 @@ var modelList = {
 	1003 : [ 1, 8, 5, 2 ],
 	1004 : [ 1, 6, 5, 2 ]
 };
-var fightArea = {
-	1 : [  ]
-}
+/**
+ * 攻击范围
+ * @type {Object}
+ */
+var attackArea = {
+	'point' : 1, //单点攻击
+	'horizontal' : 2, //横向攻击
+	'vertical' : 3, //纵向攻击
+	'all' : 4, //全屏攻击
+	'pierce' : 5 //穿透攻击
+};
 
 var leftRoles = {
 	0: { 'model': 1004, 'life': 300, 'speed': 3, 'fight': 128 },
@@ -107,65 +115,134 @@ var team = [ leftRoles, rightRoles ], opIndex = [ 1, 0 ], side;
 for (var i = 1; i < maxTime; i++) {
 	for ( j in positions ) {
 		pos = positions[ j ];
-		for( side in team )
-		{
-			if ( isset( team[ side ][ pos ] ) ) {
-				fightOnce ( side, opIndex[ side ], team[ side ][ pos ], team[ opIndex[ side ] ] );
+		for( side in team ) {
+			if ( isset( team[ side ][ pos ] ) && i % team[ side ][ pos ][ 'speed' ] == 0 
+				&& team[ side ][ pos ][ 'life' ] > 0 ) {
+				add( [ side, pos, team[ side ][ pos ][ 'model' ], 1 ] ); //攻击
+				beAttackCharge ( side, opIndex[ side ], team[ side ][ pos ], team[ opIndex[ side ] ] );
 			}
 		}
 	};
 };
 
 /**
- * 一次出手计算
+ * 被攻击计算
  * @param  {int} side    队伍位置（0：左侧，1：右侧）
  * @param  {int} opSide  对战方位置
  * @param  {array} role    攻击者信息
- * @param  {array} opRoles 被攻击对我信息
+ * @param  {array} opRoles 被攻击队伍人员信息
  * @return {void}
  */
-function fightOnce ( side, opSide, role, opRoles ) {
-	if ( i % role[ 'speed' ] == 0 && role[ 'life' ] > 0 ) {
-		add( [ side, pos, role[ 'model' ], 1 ] );
-		var indexs = findOp( pos, 1 );
-		for( var r in indexs )
-		{
-			if ( isset( opRoles[ indexs[ r] ] ) && opRoles[ indexs[ r] ][ 'life' ] > 0 ) {
-				add( [ opSide, indexs[ r], opRoles[ indexs[ r] ][ 'model' ], 2 ] );
-				opRoles[ indexs[ r] ][ 'life' ] -= role[ 'fight' ];
-				if ( opRoles[ indexs[ r] ][ 'life' ] <= 0 ) {
-					add( [ opSide, indexs[ r], opRoles[ indexs[ r] ][ 'model' ], 3 ] );
+function beAttackCharge ( side, opSide, role, opRoles ) {
+	var area = 2, r;
+	var indexs = findOp( pos, area );
+	switch ( area ) {
+		case attackArea[ 'point' ]: //单点攻击
+			for( r in indexs )
+			{
+				if ( isset( opRoles[ indexs[ r] ] ) && opRoles[ indexs[ r] ][ 'life' ] > 0 ) {
+					beAttackDo( opSide, indexs[ r], role, opRoles[ indexs[ r] ] );
+					break;
 				};
-				break;
-			};
-		}
+			}
+		break;
+		case attackArea[ 'all' ]: //全屏攻击
+			for( r in indexs )
+			{
+				if ( isset( opRoles[ indexs[ r] ] ) && opRoles[ indexs[ r] ][ 'life' ] > 0 ) {
+					beAttackDo( opSide, indexs[ r], role, opRoles[ indexs[ r] ] );
+				};
+			}
+		break;
+		case attackArea[ 'horizontal' ]: //横向攻击
+		case attackArea[ 'vertical' ]: //纵向攻击
+			var childIndexs, sign=false;
+			for( var i in indexs )
+			{
+				childIndexs = indexs[ i ];
+				for (r in childIndexs) {
+					if ( isset( opRoles[ childIndexs[ r] ] ) && opRoles[ childIndexs[ r] ][ 'life' ] > 0 ) {
+						sign=true;
+						beAttackDo( opSide, childIndexs[ r], role, opRoles[ childIndexs[ r] ] );
+					};
+				};
+				if (sign) {
+					break;
+				};
+			}
+		break;
+	}
+}
+/**
+ * 被攻击数据处理
+ * @param  {int} side    队伍位置（0：左侧，1：右侧）
+ * @param  {int} opSide  对战方位置
+ * @param  {array} role    攻击者信息
+ * @param  {array} opRole 被攻击者信息
+ * @return {void}
+ */
+function beAttackDo ( side, pos, role, opRole ) {
+	add( [ side, pos, opRole[ 'model' ], 2 ] );
+	opRole[ 'life' ] -= role[ 'fight' ];
+	if ( opRole[ 'life' ] <= 0 ) {
+		add( [ side, pos, opRole[ 'model' ], 3 ] );
 	};
 }
 
 /**
  * 计算被攻击顺序
  * @param  {int} pos 攻击者在队伍中位置
- * @param  {int} act 攻击动作编号
+ * @param  {int} area 攻击范围
  * @return {array}     被攻击序列
  */
-function findOp (pos, act) {
+function findOp (pos, area) {
 	var indexs;
-	switch ( parseInt(pos)  )
-	{
-		case 0:
-		case 1:
-		case 2:
+	pos = parseInt(pos);
+	switch ( area ) {
+		case attackArea[ 'point' ]: //单点攻击
+			switch ( pos ) {
+				case 0:
+				case 1:
+				case 2:
+					indexs = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ];
+				break;
+				case 3:
+				case 4:
+				case 5:
+					indexs = [ 3, 4, 5, 0, 1, 2, 6, 7, 8 ];
+				break;
+				case 6:
+				case 7:
+				case 8:
+					indexs = [ 6, 7, 8, 3, 4, 5, 0, 1, 2 ];
+				break;
+			}
+		break;
+		case attackArea[ 'horizontal' ]: //横向攻击
+		case attackArea[ 'pierce' ]: //穿透攻击
+			switch ( pos ) {
+				case 0:
+				case 1:
+				case 2:
+					indexs = [ [ 0, 1, 2 ], [ 3, 4, 5 ], [ 6, 7, 8 ] ];
+				break;
+				case 3:
+				case 4:
+				case 5:
+					indexs = [ [ 3, 4, 5 ], [ 0, 1, 2 ], [ 6, 7, 8 ] ];
+				break;
+				case 6:
+				case 7:
+				case 8:
+					indexs = [ [ 6, 7, 8 ], [ 3, 4, 5 ], [ 0, 1, 2 ] ];
+				break;
+			}
+		break;
+		case attackArea[ 'vertical' ]: //纵向攻击
+			indexs = [ [ 0, 3, 6 ], [ 1, 4, 7 ], [ 2, 5, 8 ] ];
+		break;
+		case attackArea[ 'all' ]: //全屏攻击
 			indexs = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ];
-		break;
-		case 3:
-		case 4:
-		case 5:
-			indexs = [ 3, 4, 5, 0, 1, 2, 6, 7, 8 ];
-		break;
-		case 6:
-		case 7:
-		case 8:
-			indexs = [ 6, 7, 8, 3, 4, 5, 0, 1, 2 ];
 		break;
 	}
 	return indexs;
