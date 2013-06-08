@@ -112,10 +112,16 @@ for ( var j=0; j < 9; j++ ) {
 var maxTime = 20, dataList = [], positions=[3,0,6,4,1,7,5,2,8];
 var len = leftRoles.length, j;
 var team = [ leftRoles, rightRoles ], opIndex = [ 1, 0 ], side;
+var dies = [ 0, 0 ], lengths = [ parseInt( Object.keys(team[0]).length ), parseInt( Object.keys(team[1]).length ) ];
 for (var i = 1; i < maxTime; i++) {
 	for ( j in positions ) {
 		pos = positions[ j ];
 		for( side in team ) {
+			//一方全部死亡，则终止
+			if ( dies[ 0 ] >= lengths[ 0 ] || dies[ 1 ] >= lengths[ 1 ] ) {
+				break;
+			};
+			//一次出手
 			if ( isset( team[ side ][ pos ] ) && i % team[ side ][ pos ][ 'speed' ] == 0 
 				&& team[ side ][ pos ][ 'life' ] > 0 ) {
 				add( [ side, pos, team[ side ][ pos ][ 'model' ], 1 ] ); //攻击
@@ -185,6 +191,7 @@ function beAttackDo ( side, pos, role, opRole ) {
 	add( [ side, pos, opRole[ 'model' ], 2 ] );
 	opRole[ 'life' ] -= role[ 'fight' ];
 	if ( opRole[ 'life' ] <= 0 ) {
+		dies[ side ]++;
 		add( [ side, pos, opRole[ 'model' ], 3 ] );
 	};
 }
