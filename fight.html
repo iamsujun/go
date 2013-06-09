@@ -3,8 +3,11 @@
 <title>Fight</title>
 <style type="text/css">
 div {
-  margin: auto;
+  	margin: auto;
 	width: 660px;
+	text-align: center;
+}
+#main_content {
 	height: 360px;
 	border: 1px solid #000;
 }
@@ -22,18 +25,26 @@ li {
 	float: left;
 	margin: 1px;
 	background: #eee;
+	position: relative;
+	color: #fff;
 }
-.gray {
-	background: #bbb;
+.stand {
+	background: rgba(94, 79, 204, 0.31);
 }
 .red {
 	background: #ff3333;
 }
-.green {
-	background: #99ff66;
+.attack {
+	background: rgb(247, 237, 19);
 }
-.black {
-	background: #000;
+.dodge {
+	background: #7CDBBD;
+}
+.die {
+	background: rgba(0, 0, 0, 0.57);
+}
+.txt {
+	position: absolute;
 }
 </style>
 <body>
@@ -47,10 +58,14 @@ function createElem (tagName) {
 
 var leftUlElem = createElem( 'ul' );
 var liElem = createElem( 'li' );
+var spanElem = createElem( 'span' );
+liElem.appendChild( spanElem );
+liElem.appendChild( spanElem.cloneNode(1) );
 for (var i = 1, len = 10; i < len; i++) {
-	leftUlElem.appendChild( liElem.cloneNode() );
+	leftUlElem.appendChild( liElem.cloneNode(1) );
 };
 var divElem = createElem( 'div' );
+divElem.id = 'main_content';
 var rightUlElem = leftUlElem.cloneNode(1);
 leftUlElem.id='leftRoles';
 rightUlElem.id='rightRoles';
@@ -58,20 +73,27 @@ divElem.appendChild( leftUlElem );
 divElem.appendChild( rightUlElem );
 document.body.appendChild( divElem );
 
-var timeSpan = createElem( 'span' );
+var timeSpan = createElem( 'div' );
 timeSpan.id = 'timeSpan';
 document.body.appendChild( timeSpan );
 
 /**
  * 战斗模型信息
  * @type {Object}
- * 模型编号 : [ 站立动作时长, 攻击动作时长, 被攻击动作时长, 死亡动作时长 ]
+ * 模型编号 : [ 站立动作时长, 攻击动作时长, 被攻击动作时长, 死亡动作时长, 闪避动作时长 ]
  */
+var actNames = {
+	0 : '站立',
+	1 : '攻击',
+	2 : '被攻击',
+	3 : '死亡',
+	4 : '闪避',
+};
 var modelList = {
-	1001 : [ 1, 6, 5, 2 ],
-	1002 : [ 1, 7, 5, 2 ],
-	1003 : [ 1, 8, 5, 2 ],
-	1004 : [ 1, 6, 5, 2 ]
+	1001 : [ 1, 6, 5, 2, 4 ],
+	1002 : [ 1, 7, 5, 2, 4 ],
+	1003 : [ 1, 8, 5, 2, 4 ],
+	1004 : [ 1, 6, 5, 2, 4 ]
 };
 /**
  * 攻击范围
@@ -86,14 +108,14 @@ var attackArea = {
 };
 
 var leftRoles = {
-	0: { 'model': 1004, 'life': 300, 'speed': 3, 'fight': 128 },
-	5: { 'model': 1002, 'life': 300, 'speed': 6, 'fight': 130 },
-	7: { 'model': 1003, 'life': 300, 'speed': 7, 'fight': 158 }
+	0: { 'model': 1004, 'life': 300, 'speed': 3, 'dodge': 0.3, 'defence': 50, 'fight': 128 },
+	5: { 'model': 1002, 'life': 300, 'speed': 6, 'dodge': 0.3, 'defence': 50, 'fight': 130 },
+	7: { 'model': 1003, 'life': 300, 'speed': 7, 'dodge': 0.3, 'defence': 50, 'fight': 158 }
 };
 var rightRoles = {
-	4: { 'model': 1002, 'life': 300, 'speed': 4, 'fight': 138 },
-	6: { 'model': 1004, 'life': 300, 'speed': 5, 'fight': 156 },
-	8: { 'model': 1001, 'life': 300, 'speed': 7, 'fight': 160 }
+	4: { 'model': 1002, 'life': 300, 'speed': 4, 'dodge': 0.3, 'defence': 50, 'fight': 138 },
+	6: { 'model': 1004, 'life': 300, 'speed': 5, 'dodge': 0.3, 'defence': 50, 'fight': 156 },
+	8: { 'model': 1001, 'life': 300, 'speed': 7, 'dodge': 0.3, 'defence': 50, 'fight': 160 }
 };
 /**
  * 阵型初始化
@@ -206,12 +228,19 @@ function beAttackCharge ( side, opSide, role, opRoles ) {
  * @return {void}
  */
 function beAttackDo ( side, pos, role, opRole ) {
-	add( [ side, pos, opRole[ 'model' ], 2 ] );
-	opRole[ 'life' ] -= role[ 'fight' ];
-	if ( opRole[ 'life' ] <= 0 ) {
-		dies[ side ]++;
-		add( [ side, pos, opRole[ 'model' ], 3 ] );
-	};
+	var rate = Math.random();
+	if ( opRole[ 'dodge' ] > rate ) { //闪避
+		add( [ side, pos, opRole[ 'model' ], 4 ] );
+	}
+	else {
+		var blood = role[ 'fight' ] - opRole[ 'defence' ] / 10;
+		opRole[ 'life' ] -= blood;
+		add( [ side, pos, opRole[ 'model' ], 2, blood ] );
+		if ( opRole[ 'life' ] <= 0 ) {
+			dies[ side ]++;
+			add( [ side, pos, opRole[ 'model' ], 3 ] );
+		};
+	}
 }
 
 /**
@@ -294,14 +323,14 @@ function play () {
 	playFrame();
 }
 function playFrame () {
-	playModel( currData[ 0 ], currData[ 1 ], currData[ 2 ], currData[ 3 ] );
+	playModel( currData[ 0 ], currData[ 1 ], currData[ 2 ], currData[ 3 ], currData[ 4 ] );
 }
 function clearFrame() {
 	playModel( currData[ 0 ], currData[ 1 ], currData[ 2 ], 0 );
 }
 play();
 
-function playModel (pos,index, modelId, act) {
+function playModel (pos,index, modelId, act, blood) {
 	var objs = [ leftUlElem, rightUlElem ];
 	var teams = [
 		[ 2, 1, 0, 5, 4, 3, 8, 7, 6 ],
@@ -309,15 +338,21 @@ function playModel (pos,index, modelId, act) {
 	];
 	var teamPos = teams[ pos ][ index ];
 	var obj = objs[ pos ].childNodes[ teamPos ];
-	var colors = { 0: 'gray', 1 : 'green', 2: 'red', 3: 'black' };
+	var nObj = obj.childNodes[ 0 ];
+	var colors = { 0: 'stand', 1 : 'attack', 2: 'red', 3: 'die', 4: 'dodge' };
 	obj.className = colors[act];
-	obj.innerHTML = '';
+	nObj.innerHTML = '';
 	if (act == 0) {
 		return
 	};
+	if ( isset( blood ) ) {
+		actNames[act]
+	};
+	var str = isset( blood ) ? 	-1 * blood : '';
+	showTxt( obj, actNames[act] + str );
 	
 	var n=0, sign = setInterval( function(){
-		obj.innerHTML = n;
+		//nObj.innerHTML = n;
 		if ( n++ >= modelList[ modelId ][ act ] ) {
 			clearInterval( sign );
 			if (act != 3) {
@@ -326,6 +361,21 @@ function playModel (pos,index, modelId, act) {
 			play();
 		};
 	}, baseSpeed );
+}
+
+function showTxt (elem,txt) {
+	var obj = createElem( 'span' );
+	obj.innerHTML = txt;
+	obj.className = 'txt';
+	obj.style.right = '10px';
+	elem.appendChild( obj );
+	var n = 0, t = setInterval( function(){
+		obj.style.top = 40-2*n + 'px';
+		if ( n++ > 10) {
+			clearInterval( t );
+			elem.removeChild( obj );
+		};
+	}, 50 )
 }
 </script>
 </body>
