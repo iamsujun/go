@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tree</title>
+    <style>::-webkit-scrollbar{display:none;}html,body{margin:0;font-size:10px;}</style>
+</head>
+<body>
+<div id="mountNode"></div>
+
+<!-- js package from http://antv.alipay.com/zh-cn/g6/3.x/demo/scatter/default-animate.html -->
+<script>/*Fixing iframe window.innerHeight 0 issue in Safari*/document.body.clientHeight;</script>
+<script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.0.2/build/g6.js"></script>
+<script>
+data = [
+    {'id':1, "up": 0, "level": 5, 'score': 100 },
+    {'id':2, "up": 1, "level": 1, 'score': 100 },
+    {'id':3, "up": 1, "level": 4, 'score': 100 },
+    {'id':4, "up": 2, "level": 2, 'score': 100 },
+    {'id':5, "up": 4, "level": 1, 'score': 100 },
+    {'id':6, "up": 4, "level": 2, 'score': 100 },
+    {'id':7, "up": 6, "level": 1, 'score': 100 },
+    {'id':8, "up": 7, "level": 1, 'score': 100 },
+    {'id':9, "up": 8, "level": 1, 'score': 100 },
+    {'id':10, "up": 9, "level": 4, 'score': 100 },
+    {'id':11, "up": 10, "level": 1, 'score': 100 },
+    {'id':12, "up": 3, "level": 1, 'score': 100 },
+    {'id':13, "up": 12, "level": 3, 'score': 100 },
+    {'id':14, "up": 13, "level": 1, 'score': 100 },
+    {'id':15, "up": 14, "level": 1, 'score': 100 },
+    {'id':16, "up": 15, "level": 5, 'score': 100 },
+    {'id':17, "up": 16, "level": 1, 'score': 100 },
+    {'id':18, "up": 17, "level": 1, 'score': 100 },
+    {'id':19, "up": 18, "level": 3, 'score': 100 },
+    {'id':21, "up": 3, "level": 1, 'score': 100 },
+    {'id':22, "up": 21, "level": 1, 'score': 100 },
+    {'id':23, "up": 22, "level": 1, 'score': 100 },
+    {'id':24, "up": 23, "level": 1, 'score': 100 },
+    {'id':25, "up": 24, "level": 2, 'score': 100 },
+    {'id':26, "up": 25, "level": 1, 'score': 100 },
+    {'id':27, "up": 26, "level": 1, 'score': 100 },
+    {'id':28, "up": 27, "level": 1, 'score': 100 },
+    {'id':29, "up": 29, "level": 1, 'score': 100 },
+];
+
+var charge = function(data){
+  var ups = [], leaf = [], edge = [], level_count = [], arr = [];
+  var prefix = 'R';
+  var color = {
+    1 : "#f7e6a1",
+    2 : "#40a9ff",
+    3 : "#009688",
+    4 : "#F04864",
+    5 : "#ff5722",
+  };
+  for(var row of data) {
+    if (typeof(ups[row['up']]) == 'undefined') {
+      ups[row['up']] = [];
+    }
+    arr[row['id']] = row;
+    ups[row['up']].push(row['id']);
+  }
+  // console.dir(ups);
+  // console.dir(arr);
+
+  var recursive = function(key, level) {
+    for(var row of ups[key]){
+      if (typeof(level_count[level]) == 'undefined') {
+        level_count[level] = 0;
+      }
+      leaf.push({
+        id: prefix + row,
+        label: prefix + row + '\n' + arr[row]['level'] + ' ' + arr[row]['score'],
+        x: 60 * ++level_count[level],
+        y: 60 * level,
+        style: {
+          fill: color[arr[row]['level']],
+          stroke: null
+        }
+      });
+      if(key > 0) {
+        edge.push({
+          'id': '',
+          'source': prefix + key,
+          'target': prefix + row
+        });
+      }
+      if (typeof(ups[row]) != 'undefined') {
+        recursive(row, level+1);
+      }
+    }
+  }
+
+  recursive(0, 1);
+
+  return {
+    'leaf': leaf,
+    'edge': edge,
+  }
+};
+var ref = charge(data);
+console.table(data);
+
+var graph = new G6.Graph({
+  container: 'mountNode',
+  width: window.innerWidth,
+  height: window.innerHeight,
+  animate: true
+});
+var data = {
+  nodes: ref.leaf,
+  edges: ref.edge
+};
+graph.data(data);
+graph.render();
+
+
+// setInterval(function() {
+//   data.nodes.forEach(function(node) {
+//     node.x += Math.random() * 50 - 25;
+//     if(node.x < 0) {
+//       node.x = 10;
+//     }
+//     if(node.x > 800) {
+//       node.x = 800 - 10;
+//     }
+//   //   node.y += Math.random() * 50 - 25;
+//   });
+//   graph.changeData(data);
+// }, 600);
+
+</script>
+</body>
+</html>
