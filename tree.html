@@ -3,7 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <title>Tree</title>
-    <style>::-webkit-scrollbar{display:none;}html,body{margin:0;font-size:10px;}</style>
+    <style>
+      ::-webkit-scrollbar {
+        display:none;
+      }
+      html,body {
+        margin:0;
+        font-size:10px;
+      }
+      .g6-minimap {
+          position: absolute;
+          right: 0;
+          top: 6px;
+          background-color: #fff;
+          cursor: move;
+      }
+    </style>
 </head>
 <body>
 <div id="mountNode"></div>
@@ -11,8 +26,10 @@
 <!-- js package from http://antv.alipay.com/zh-cn/g6/3.x/demo/scatter/default-animate.html -->
 <script>/*Fixing iframe window.innerHeight 0 issue in Safari*/document.body.clientHeight;</script>
 <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.0.2/build/g6.js"></script>
+<script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.0.2/build/minimap.js"></script>
+
 <script>
-data = [
+var data = [
     {'id':1, "up": 0, "level": 5, 'score': 100 },
     {'id':2, "up": 1, "level": 1, 'score': 100 },
     {'id':3, "up": 1, "level": 4, 'score': 100 },
@@ -44,7 +61,7 @@ data = [
 ];
 
 var charge = function(data){
-  var ups = [], leaf = [], edge = [], level_count = [], arr = [];
+  var ups = [], leaf = [], edge = [], level_count = [], arr = [], root = 0;
   var prefix = 'R';
   var color = {
     1 : "#f7e6a1",
@@ -78,7 +95,7 @@ var charge = function(data){
           stroke: null
         }
       });
-      if(key > 0) {
+      if(key !== root) {
         edge.push({
           'id': '',
           'source': prefix + key,
@@ -91,7 +108,7 @@ var charge = function(data){
     }
   }
 
-  recursive(0, 1);
+  recursive(root, 1);
 
   return {
     'leaf': leaf,
@@ -101,11 +118,19 @@ var charge = function(data){
 var ref = charge(data);
 console.table(data);
 
+var minimap = new Minimap({
+    size: [window.innerWidth / 4, window.innerHeight / 4]
+  });
+
 var graph = new G6.Graph({
   container: 'mountNode',
   width: window.innerWidth,
   height: window.innerHeight,
-  animate: true
+  animate: true,
+  plugins: [minimap],
+  modes: {
+    default: ['zoom-canvas', 'drag-canvas']
+  }
 });
 var data = {
   nodes: ref.leaf,
